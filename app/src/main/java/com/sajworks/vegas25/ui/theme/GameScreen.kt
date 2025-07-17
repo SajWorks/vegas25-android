@@ -19,17 +19,27 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sajworks.vegas25.data_models.GameStateData
+import com.sajworks.vegas25.view_models.GameViewModel
+import com.sajworks.vegas25.data_models.GameStateData.*
+import com.sajworks.vegas25.data_models.Guess
+import com.sajworks.vegas25.data_models.GuessResponse
+import com.sajworks.vegas25.view_models.GameViewModel.*
+
+
 
 @Composable
-fun GameScreen() {
+fun GameScreen(gameViewModel: GameViewModel, gameStateData: GameStateData?) {
 
     val scrollState = rememberScrollState()
+
 
     Column(
         modifier = Modifier
@@ -128,22 +138,35 @@ fun GameScreen() {
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Guess(colors = listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow))
-            Guess(colors = listOf(Color.Red, Color.Magenta, Color.Cyan, Color.Yellow))
-            Guess(colors = listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow))
+            gameStateData?.guesses?.forEach { guess ->
+                ViewGuess(guess = guess, gameViewModel = gameViewModel)
+            }
         }
     }
 }
 
+fun mapResponseToColors(response: GuessResponse): List<Color> {
+    val responseColors = mutableListOf<Color>()
+
+    repeat(response.black) { responseColors.add(Color.Black) }
+    repeat(response.white) { responseColors.add(Color.White) }
+
+    while (responseColors.size < 4) {
+        responseColors.add(Color.Transparent)
+    }
+
+    return responseColors
+}
 /// A row representing a single guess with 4 colored circles and 4 response circles
 @Composable
-fun Guess(colors: List<Color>) {
+fun ViewGuess(guess: Guess, gameViewModel: GameViewModel) {
+    val colors = gameViewModel.mapGuessToColors(guess)
+    val responseColors = mapResponseToColors(guess.response)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         colors.take(4).forEach { color ->
             CircleView(color = color)
         }
-        Response(colors = listOf(Color.Black, Color.Black, Color.White, Color.Transparent))
+        Response(colors = responseColors)
     }
 }
 
@@ -196,18 +219,8 @@ fun SmallResponseCircle(color: Color?) {
 @Preview(showBackground = true)
 @Composable
 fun GuessPreview() {
-    Guess(
-        colors = listOf(
-            Color.Red,
-            Color.Green,
-            Color.Blue,
-            Color.Yellow
-        )
+    val guess = Guess(
+        guess = "RED,GREEN,BLUE,YELLOW",
+        response = GuessResponse(black = 2, white = 1)
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GameScreenPreview() {
-    GameScreen()
 }
