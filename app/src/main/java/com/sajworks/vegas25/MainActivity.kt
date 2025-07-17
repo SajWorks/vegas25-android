@@ -21,6 +21,7 @@ import com.sajworks.vegas25.ui.theme.Vegas25Theme
 import com.sajworks.vegas25.view_models.SensorViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sajworks.vegas25.ui.theme.GameScreen
+import com.sajworks.vegas25.view_models.GameViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,11 +44,14 @@ fun MainContent(innerPadding: PaddingValues = PaddingValues(20.dp)) {
             .padding(innerPadding)
             .fillMaxSize()
     ) {
-        val viewModel: SensorViewModel = viewModel()
-        val uiState by viewModel.sensorData.collectAsState()
+        //val viewModel: SensorViewModel = viewModel()
+        //val uiState by viewModel.sensorData.collectAsState()
+        val gameViewModel: GameViewModel = viewModel()
+
+        val gameState by gameViewModel.gameStateData.collectAsState()
 
 //        SensorDataScreen(viewModel = viewModel, sensorData = uiState)
-        GameScreen()
+        GameScreen(gameViewModel = gameViewModel, gameStateData = gameState)
     }
 }
 
