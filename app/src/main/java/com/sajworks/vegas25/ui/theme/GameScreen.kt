@@ -3,6 +3,7 @@ package com.sajworks.vegas25.ui.theme
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,12 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +36,26 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun GameScreen() {
 
+    val colorChoices = listOf(
+        Color.Red,
+        Color.Green,
+        Color.Blue,
+        Color.Yellow,
+        Color(0xFFFFA500), // Orange
+        Color(0xFF800080)  // Purple
+    )
+
     val scrollState = rememberScrollState()
+    val selectedColors = remember { mutableStateListOf<Int?>() }
+    var enterEnabled by remember { mutableStateOf(false) }
+
+    // Initialize the selectedColors with null values so that the colors of the guess will be empty
+    LaunchedEffect(Unit) {
+        selectedColors.add(null)
+        selectedColors.add(null)
+        selectedColors.add(null)
+        selectedColors.add(null)
+    }
 
     Column(
         modifier = Modifier
@@ -54,33 +80,36 @@ fun GameScreen() {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Text(
-            "Player 2 Wins!",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .padding(bottom = 12.dp)
-                .align(Alignment.CenterHorizontally)
-        )
+        if (false) {
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow).forEach { color ->
-                CircleView(color = color)
+            Text(
+                "Player 2 Wins!",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(bottom = 12.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow).forEach { color ->
+                    CircleView(color = color)
+                }
             }
+
+            Text(
+                "Correct Pattern",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier
+                    .padding(bottom = 12.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Divider(
+                color = Color.Gray,
+                thickness = 1.dp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
         }
-
-        Text(
-            "Correct Pattern",
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier
-                .padding(bottom = 12.dp)
-                .align(Alignment.CenterHorizontally)
-        )
-
-        Divider(
-            color = Color.Gray,
-            thickness = 1.dp,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
 
         Text(
             "Make a guess",
@@ -91,8 +120,24 @@ fun GameScreen() {
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow).forEach { color ->
-                CircleView(color = color)
+            selectedColors.forEachIndexed { index, colorIndex ->
+                var color = Color.White
+                if (colorIndex != null && colorIndex < colorChoices.size) {
+                    color = colorChoices[colorIndex]
+                }
+                CircleView(
+                    color = color,
+                    modifier = Modifier.clickable {
+
+                        /// Increment the colorIndex for the selected circle to toggle through the colorChoices
+                        var newColorIndex = 0
+                        if (colorIndex != null && colorIndex < colorChoices.size - 1) {
+                            newColorIndex = colorIndex + 1
+                        }
+                        selectedColors[index] = newColorIndex
+                    }
+                )
+
             }
         }
 
@@ -100,7 +145,7 @@ fun GameScreen() {
             onClick = {
                 // Submit a guess
             },
-            enabled = true,
+            enabled = validGuessColors(selectedColors),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
@@ -136,6 +181,13 @@ fun GameScreen() {
     }
 }
 
+fun validGuessColors(selectedColors: List<Int?>): Boolean {
+
+    // Check that all colors are defined and there are no repeated colors
+    if (selectedColors.any { it == null }) return false
+    return selectedColors.size == selectedColors.toSet().size
+}
+
 /// A row representing a single guess with 4 colored circles and 4 response circles
 @Composable
 fun Guess(colors: List<Color>) {
@@ -149,9 +201,9 @@ fun Guess(colors: List<Color>) {
 
 /// A view for one single color of a guess
 @Composable
-fun CircleView(color: Color) {
+fun CircleView(color: Color, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(50.dp)
             .clip(CircleShape) // Clips the Box to a circle shape
             .background(color) // Sets the background color of the circle
