@@ -24,14 +24,18 @@ class GameViewModel : ViewModel() {
     private val api = GameApiClient.api
     fun mapGuessToColors(guess: Guess): List<Color> {
         // Split the guess string by one character and map to Color
-        return guess.guess.chunked(1).map { colorName ->
+        return mapStringToColors(guess.guess)
+
+    }
+    fun mapStringToColors(guessString: String): List<Color>{
+        return guessString.chunked(1).map { colorName ->
             when (colorName.trim().lowercase()) {
                 "r" -> Color.Red
                 "g" -> Color.Green
                 "b" -> Color.Blue
                 "y" -> Color.Yellow
                 "o" -> Color(0xFFFFA500) // Orange
-                "p"-> Color(0xFF800080)  // Purple
+                "p" -> Color(0xFF800080)  // Purple
                 // Add more colors if needed
                 else -> Color.Gray // fallback for unknown colors
             }
@@ -46,7 +50,7 @@ class GameViewModel : ViewModel() {
                 Color(0xFF800080) -> "p"
                 Color(0xFFFFA500) -> "o"
                 Color.Green -> "g"
-                else -> "?"
+                else -> "r"
             }
         }// to call     val colorList = listOf(Color.Red, Color.Green, Color.Blue)
         //val guessString = mapColorsToGuess(colorList)
