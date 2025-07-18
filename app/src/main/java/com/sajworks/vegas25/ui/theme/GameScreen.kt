@@ -75,7 +75,6 @@ fun GameScreen(gameViewModel: GameViewModel, gameStateData: GameStateData?) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Text(
             "Mastermind Game",
             style = MaterialTheme.typography.headlineMedium,
@@ -90,7 +89,7 @@ fun GameScreen(gameViewModel: GameViewModel, gameStateData: GameStateData?) {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        if (false) {
+        if (gameStateData?.state == "ENDED") {
 
             Text(
                 "Player 2 Wins!",
@@ -154,6 +153,16 @@ fun GameScreen(gameViewModel: GameViewModel, gameStateData: GameStateData?) {
         Button(
             onClick = {
                 // Submit a guess
+                val guessColors: MutableList<Color> = mutableListOf()
+                for (colorIndex in selectedColors) {
+                    if (colorIndex != null) {
+                        guessColors.add(colorChoices[colorIndex])
+                    } else {
+                        guessColors.add(Color.Red)
+                    }
+                }
+                val guessString = gameViewModel.mapColorsToGuess(guessColors)
+                gameViewModel.submitGuess(guessString)
             },
             enabled = validGuessColors(selectedColors),
             modifier = Modifier
@@ -168,27 +177,36 @@ fun GameScreen(gameViewModel: GameViewModel, gameStateData: GameStateData?) {
             thickness = 1.dp,
             modifier = Modifier.padding(vertical = 8.dp)
         )
+        if (gameStateData?.state == null) {
+            Text(
+                "No other player found.",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(bottom = 12.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+        } else {
+            Text(
+                "Guess History",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(bottom = 12.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
 
-        Text(
-            "Guess History",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .padding(bottom = 12.dp)
-                .align(Alignment.CenterHorizontally)
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            gameStateData?.guesses?.forEach { guess ->
-                ViewGuess(guess = guess, gameViewModel = gameViewModel)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                gameStateData?.guesses?.forEach { guess ->
+                    ViewGuess(guess = guess, gameViewModel = gameViewModel)
+                }
             }
         }
     }
 }
+
 
 fun validGuessColors(selectedColors: List<Int?>): Boolean {
 
@@ -197,17 +215,26 @@ fun validGuessColors(selectedColors: List<Int?>): Boolean {
     return selectedColors.size == selectedColors.toSet().size
 }
 
-fun mapResponseToColors(response: GuessResponse): List<Color> {
+fun mapResponseToColors(response: GuessResponse?): List<Color> {
     val responseColors = mutableListOf<Color>()
 
-    repeat(response.black) { responseColors.add(Color.Black) }
-    repeat(response.white) { responseColors.add(Color.White) }
+    if (response != null) {
+        repeat(response.black) { responseColors.add(Color.Black) }
+        repeat(response.white) { responseColors.add(Color.White) }
 
-    while (responseColors.size < 4) {
+
+        while (responseColors.size < 4) {
+            responseColors.add(Color.Transparent)
+        }
+
+        return responseColors
+    } else {
         responseColors.add(Color.Transparent)
+        responseColors.add(Color.Transparent)
+        responseColors.add(Color.Transparent)
+        responseColors.add(Color.Transparent)
+        return responseColors
     }
-
-    return responseColors
 }
 
 /// A row representing a single guess with 4 colored circles and 4 response circles

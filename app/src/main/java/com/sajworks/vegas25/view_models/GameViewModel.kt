@@ -23,7 +23,7 @@ class GameViewModel : ViewModel() {
 
     private val api = GameApiClient.api
     fun mapGuessToColors(guess: Guess): List<Color> {
-        // Split the guess string by commas and map to Color
+        // Split the guess string by one character and map to Color
         return guess.guess.chunked(1).map { colorName ->
             when (colorName.trim().lowercase()) {
                 "r" -> Color.Red
@@ -36,6 +36,22 @@ class GameViewModel : ViewModel() {
                 else -> Color.Gray // fallback for unknown colors
             }
         }
+    }
+    fun mapColorsToGuess(colors: List<Color>): String {
+        return colors.joinToString ("") { color ->
+            when (color) {
+                Color.Red -> "r"
+                Color.Yellow -> "y"
+                Color.Blue -> "b"
+                Color(0xFF800080) -> "p"
+                Color(0xFFFFA500) -> "o"
+                Color.Green -> "g"
+                else -> "?"
+            }
+        }// to call     val colorList = listOf(Color.Red, Color.Green, Color.Blue)
+        //val guessString = mapColorsToGuess(colorList)
+        //api.sendGuess(guessString)
+
     }
 
     init {
@@ -53,7 +69,9 @@ class GameViewModel : ViewModel() {
             }
         }
     }
-    fun submitGuess(guess: Guess) {
-        _guessHistory.value = _guessHistory.value + guess
+    fun submitGuess(guess: String){
+        viewModelScope.launch {
+            api.sendGuess(guess)
+        }
     }
 }
